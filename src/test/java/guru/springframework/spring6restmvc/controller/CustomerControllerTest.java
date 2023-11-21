@@ -1,8 +1,7 @@
 package guru.springframework.spring6restmvc.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import guru.springframework.spring6restmvc.model.Customer;
+import guru.springframework.spring6restmvc.model.CustomerDTO;
 import guru.springframework.spring6restmvc.services.CustomerService;
 import guru.springframework.spring6restmvc.services.CustomerServiceImpl;
 import org.junit.jupiter.api.Test;
@@ -12,19 +11,13 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -51,7 +44,7 @@ class CustomerControllerTest {
     @Captor
     ArgumentCaptor<UUID> uuidArgumentCaptor = ArgumentCaptor.forClass(UUID.class);
 
-    ArgumentCaptor<Customer> customerArgumentCaptor = ArgumentCaptor.forClass(Customer.class);
+    ArgumentCaptor<CustomerDTO> customerArgumentCaptor = ArgumentCaptor.forClass(CustomerDTO.class);
 
     CustomerServiceImpl customerServiceImpl;
 
@@ -63,7 +56,7 @@ class CustomerControllerTest {
     @Test
     void testListCustomers() throws Exception {
 
-        List<Customer> customerList = customerServiceImpl.getAllCustomers();
+        List<CustomerDTO> customerList = customerServiceImpl.getAllCustomers();
 
         given(customerService.getAllCustomers()).willReturn(customerList);
 
@@ -83,7 +76,7 @@ class CustomerControllerTest {
 
     @Test
     void testGetCustomerById() throws Exception {
-        Customer customer = customerServiceImpl.getAllCustomers().get(0);
+        CustomerDTO customer = customerServiceImpl.getAllCustomers().get(0);
 
         given(customerService.getCustomerById(customer.getId())).willReturn(Optional.of(customer));
 
@@ -97,7 +90,7 @@ class CustomerControllerTest {
 
     @Test
     void testSaveCustomer() throws Exception {
-        Customer testCustomer = customerServiceImpl.getAllCustomers().get(0);
+        CustomerDTO testCustomer = customerServiceImpl.getAllCustomers().get(0);
         testCustomer.setId(null);
         testCustomer.setVersion(null);
 
@@ -113,7 +106,7 @@ class CustomerControllerTest {
 
     @Test
     void testUpdateCustomer() throws Exception {
-        Customer customer = customerServiceImpl.getAllCustomers().get(0);
+        CustomerDTO customer = customerServiceImpl.getAllCustomers().get(0);
         Map<Object, Object > map = new HashMap<>();
         map.put("name", "new Customer name");
 
@@ -132,8 +125,8 @@ class CustomerControllerTest {
 
     @Test
     void testDeleteCustomer() throws Exception {
-        List<Customer> customerList = customerServiceImpl.getAllCustomers();
-        Customer customer = customerList.get(0);
+        List<CustomerDTO> customerList = customerServiceImpl.getAllCustomers();
+        CustomerDTO customer = customerList.get(0);
 
         mockMvc.perform(delete(CustomerController.CUSTOMER_PATH_ID, customer.getId()))
                 .andExpect(status().isNoContent());
@@ -145,7 +138,7 @@ class CustomerControllerTest {
 
     @Test
     void testPatchCustomerById() throws Exception {
-        Customer customer = customerServiceImpl.getAllCustomers().get(0);
+        CustomerDTO customer = customerServiceImpl.getAllCustomers().get(0);
         Map<Object, Object > map = new HashMap<>();
         map.put("name", "new Customer name");
 
