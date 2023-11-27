@@ -110,6 +110,9 @@ class CustomerControllerTest {
         Map<Object, Object > map = new HashMap<>();
         map.put("name", "new Customer name");
 
+        //add method due to changing signature of update method to optional
+        given(customerService.updateCustomerById(any(), any())).willReturn(Optional.of(customer));
+
         mockMvc.perform(put(CustomerController.CUSTOMER_PATH_ID, customer.getId())
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -128,6 +131,9 @@ class CustomerControllerTest {
         List<CustomerDTO> customerList = customerServiceImpl.getAllCustomers();
         CustomerDTO customer = customerList.get(0);
 
+        //adding because of changing method signature of delete
+        given(customerService.deleteCustomerById(any())).willReturn(true);
+
         mockMvc.perform(delete(CustomerController.CUSTOMER_PATH_ID, customer.getId()))
                 .andExpect(status().isNoContent());
 
@@ -142,6 +148,7 @@ class CustomerControllerTest {
         Map<Object, Object > map = new HashMap<>();
         map.put("name", "new Customer name");
 
+        given(customerService.patchCustomerById(any(), any())).willReturn(Optional.of(customer));
         mockMvc.perform(patch(CustomerController.CUSTOMER_PATH_ID, customer.getId())
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)

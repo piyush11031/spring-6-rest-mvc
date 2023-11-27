@@ -38,5 +38,6 @@ class BootStrapDataTest {
         bootStrapData.run();
 
         assertThat(beerRepository.findAll().size()).isEqualTo(3);
+        assertThat(customerRepository.findAll().size()).isEqualTo(3);
     }
 }

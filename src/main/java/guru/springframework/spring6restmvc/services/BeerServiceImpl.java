@@ -96,7 +96,7 @@ public class BeerServiceImpl implements BeerService {
     }
 
     @Override
-    public void updateBeerById(UUID beerId, BeerDTO beer) {
+    public Optional<BeerDTO> updateBeerById(UUID beerId, BeerDTO beer) {
         BeerDTO oldBeer = beerMap.get(beerId);
 
         oldBeer.setBeerName(beer.getBeerName());
@@ -106,15 +106,17 @@ public class BeerServiceImpl implements BeerService {
         oldBeer.setQuantityOnHand(beer.getQuantityOnHand());
 
         beerMap.put(beerId, oldBeer);
+        return Optional.of(beerMap.get(beerId));
     }
 
     @Override
-    public void deleteBeerById(UUID beerId) {
+    public Boolean deleteBeerById(UUID beerId) {
         beerMap.remove(beerId);
+        return true;
     }
 
     @Override
-    public void patchBeerById(UUID beerID, BeerDTO beer) {
+    public Optional<BeerDTO> patchBeerById(UUID beerID, BeerDTO beer) {
     //Rule of Thumb: We're going to get a POJO here, if a property is null we don't do  the update
     //if it has a value, then update it
 
@@ -135,6 +137,8 @@ public class BeerServiceImpl implements BeerService {
         if(StringUtils.hasText(beer.getUpc())){
             existing.setUpc(beer.getUpc());
         }
+
+        return Optional.of(beerMap.get(beerID));
     }
 
 }

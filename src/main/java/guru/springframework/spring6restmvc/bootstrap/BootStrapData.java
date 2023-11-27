@@ -4,6 +4,7 @@ import guru.springframework.spring6restmvc.entities.Beer;
 import guru.springframework.spring6restmvc.entities.Customer;
 import guru.springframework.spring6restmvc.model.BeerDTO;
 import guru.springframework.spring6restmvc.model.BeerStyle;
+import guru.springframework.spring6restmvc.model.CustomerDTO;
 import guru.springframework.spring6restmvc.repositories.BeerRepository;
 import guru.springframework.spring6restmvc.repositories.CustomerRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,8 +26,8 @@ public class BootStrapData implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         loadBeerData();
+        loadCustomerData();
     }
-
     private void loadBeerData() {
         Beer beer1 = Beer.builder()
                 .id(UUID.randomUUID())
@@ -66,4 +67,34 @@ public class BootStrapData implements CommandLineRunner {
 
         beerRepository.saveAll(Arrays.asList(beer1, beer2, beer3));
     }
+
+    private void loadCustomerData() {
+        Customer customer1 = Customer.builder()
+                .id(UUID.randomUUID())
+                .name("Customer 1")
+                .version(1)
+                .createdDate(LocalDateTime.now())
+                .updateDate(LocalDateTime.now())
+                .build();
+
+        Customer customer2 = Customer.builder()
+                .id(UUID.randomUUID())
+                .name("Customer 2")
+                .version(1)
+                .createdDate(LocalDateTime.now())
+                .updateDate(LocalDateTime.now())
+                .build();
+
+        Customer customer3 = Customer.builder()
+                .id(UUID.randomUUID())
+                .name("Customer 3")
+                .version(1)
+                .createdDate(LocalDateTime.now())
+                .updateDate(LocalDateTime.now())
+                .build();
+
+        customerRepository.saveAll(Arrays.asList(customer1, customer2, customer3));
+    }
+
+
 }
