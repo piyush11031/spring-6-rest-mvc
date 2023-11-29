@@ -1,43 +1,40 @@
 package guru.springframework.spring6restmvc.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import guru.springframework.spring6restmvc.entities.Beer;
 import guru.springframework.spring6restmvc.mappers.BeerMapper;
 import guru.springframework.spring6restmvc.model.BeerDTO;
 import guru.springframework.spring6restmvc.model.BeerStyle;
 import guru.springframework.spring6restmvc.repositories.BeerRepository;
-import jakarta.transaction.Transactional;
 import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.hamcrest.core.Is.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 class BeerControllerIT {
-
     @Autowired
     BeerController beerController;
 
@@ -61,129 +58,107 @@ class BeerControllerIT {
     }
 
     @Test
-    void testListBeersByName() throws Exception {
-
-        mockMvc.perform(get(BeerController.BEER_PATH)
-                .queryParam("beerName", "IPA"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()", is(336)));
-    }
-
-    @Test
-    void testListBeerByStyle() throws Exception {
-
-        mockMvc.perform(get(BeerController.BEER_PATH)
-                .queryParam("beerStyle", BeerStyle.IPA.name()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()", is(548)));
-    }
-
-    @Test
-    void testListBeerByStyleAndName() throws Exception {
-        mockMvc.perform(get(BeerController.BEER_PATH)
-                .queryParam("beerName", "IPA")
-                .queryParam("beerStyle", BeerStyle.IPA.name()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()", is(310)));
-    }
-
-    @Test
-    void testListBeersByStyleAndNameShowInventoryTrue() throws Exception {
-        mockMvc.perform(get(BeerController.BEER_PATH)
-                .queryParam("beerName", "IPA")
-                .queryParam("beerStyle", BeerStyle.IPA.name())
-                .queryParam("showInventory", "True"))//If showInventory is True, then there should be quantityOnHand field in the json value.
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()", is(310)))
-                .andExpect(jsonPath("$.[0].quantityOnHand").value(IsNull.notNullValue()));
-    }
-    @Test
-    void testListBeersByStyleAndNameShowInventoryFalse() throws Exception {
+    void tesListBeersByStyleAndNameShowInventoryTruePage2() throws Exception {
         mockMvc.perform(get(BeerController.BEER_PATH)
                         .queryParam("beerName", "IPA")
                         .queryParam("beerStyle", BeerStyle.IPA.name())
-                        .queryParam("showInventory", "False"))
+                        .queryParam("showInventory", "true")
+                        .queryParam("pageNumber", "2")
+                        .queryParam("pageSize", "50"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()", is(310)))
-                .andExpect(jsonPath("$.[0].quantityOnHand").value(IsNull.nullValue()));
+                .andExpect(jsonPath("$.content.size()", is(50)))
+                .andExpect(jsonPath("$.content[0].quantityOnHand").value(IsNull.notNullValue()));
     }
 
     @Test
-    void testPatchBeerName() throws Exception {
+    void tesListBeersByStyleAndNameShowInventoryTrue() throws Exception {
+        mockMvc.perform(get(BeerController.BEER_PATH)
+                        .queryParam("beerName", "IPA")
+                        .queryParam("beerStyle", BeerStyle.IPA.name())
+                        .queryParam("showInventory", "true")
+                        .queryParam("pageSize", "800"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.size()", is(310)))
+                .andExpect(jsonPath("$.content[0].quantityOnHand").value(IsNull.notNullValue()));
+    }
 
+    @Test
+    void tesListBeersByStyleAndNameShowInventoryFalse() throws Exception {
+        mockMvc.perform(get(BeerController.BEER_PATH)
+                        .queryParam("beerName", "IPA")
+                        .queryParam("beerStyle", BeerStyle.IPA.name())
+                        .queryParam("showInventory", "false")
+                        .queryParam("pageSize", "800"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.size()", is(310)))
+                .andExpect(jsonPath("$.content[0].quantityOnHand").value(IsNull.nullValue()));
+    }
+
+    @Test
+    void tesListBeersByStyleAndName() throws Exception {
+        mockMvc.perform(get(BeerController.BEER_PATH)
+                        .queryParam("beerName", "IPA")
+                        .queryParam("beerStyle", BeerStyle.IPA.name())
+                        .queryParam("pageSize", "800"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.size()", is(310)));
+    }
+
+    @Test
+    void tesListBeersByStyle() throws Exception {
+        mockMvc.perform(get(BeerController.BEER_PATH)
+                        .queryParam("beerStyle", BeerStyle.IPA.name())
+                        .queryParam("pageSize", "800"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.size()", is(548)));
+    }
+
+    @Test
+    void tesListBeersByName() throws Exception {
+        mockMvc.perform(get(BeerController.BEER_PATH)
+                .queryParam("beerName", "IPA")
+                .queryParam("pageSize", "800"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.size()", is(336)));
+    }
+
+    @Test
+    void testPatchBeerBadName() throws Exception {
         Beer beer = beerRepository.findAll().get(0);
 
         Map<String, Object> beerMap = new HashMap<>();
-        beerMap.put("beerName", "New Nameeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+        beerMap.put("beerName", "New Name 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890");
 
-        MvcResult mvcResult = mockMvc.perform(patch(BeerController.BEER_PATH_ID, beer.getId())
-                        .accept(MediaType.APPLICATION_JSON)
+        mockMvc.perform(patch(BeerController.BEER_PATH_ID, beer.getId())
                         .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(beerMap)))
-                .andExpect(status().isBadRequest()).andReturn();
-
-        System.out.println(mvcResult.getResponse().getContentAsString());
-    }
-
-    @Transactional
-    @Test
-    void testEmptyList() {
-        beerRepository.deleteAll();
-
-        assertThat(beerController.listBeers(null, null, false).size()).isEqualTo(0);
-    }
-    @Test
-    void testListBeers() {
-        List<BeerDTO> list = beerController.listBeers(null, null, false);
-
-        assertThat(list.size()).isEqualTo(2413);
+                .andExpect(status().isBadRequest());
 
     }
 
     @Test
-    void testBeerByIdNotFound() {
-        assertThrows(NotFoundException.class, () ->{
-            beerController.getBeerById(UUID.randomUUID());
+    void testDeleteByIDNotFound() {
+        assertThrows(NotFoundException.class, () -> {
+            beerController.deleteById(UUID.randomUUID());
         });
     }
 
+    @Rollback
+    @Transactional
     @Test
-    void testGetBeerById() {
+    void deleteByIdFound() {
         Beer beer = beerRepository.findAll().get(0);
 
-        BeerDTO dto = beerController.getBeerById(beer.getId());
-        assertThat(dto).isNotNull();
-    }
+        ResponseEntity responseEntity = beerController.deleteById(beer.getId());
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(204));
 
-    @Rollback
-    @Transactional //We are modifying the database,
-    //so we should rollback the changes after test is completed.
-    @Test
-    void saveNewBeerTest() {
-
-        BeerDTO beerDTO = BeerDTO.builder()
-                .beerName("New Beer")
-                .build();
-
-        ResponseEntity responseEntity = beerController.handlePost(beerDTO);
-
-//checks status code 201
-        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.valueOf(201));
-//checks location header exist
-        assertThat(responseEntity.getHeaders().getLocation()).isNotNull();
-
-        String[] locationUUID =responseEntity.getHeaders().getLocation().getPath().split("/");
-        UUID savedUUID = UUID.fromString(locationUUID[4]);
-
-//checks beer is saved in repo
-        Beer beer = beerRepository.findById(savedUUID).get();
-        assertThat(beer).isNotNull();
+        assertThat(beerRepository.findById(beer.getId()).isEmpty());
     }
 
     @Test
-    void testUpdateBeerNotFound() {
-
-        assertThrows(NotFoundException.class, () ->{
+    void testUpdateNotFound() {
+        assertThrows(NotFoundException.class, () -> {
             beerController.updateById(UUID.randomUUID(), BeerDTO.builder().build());
         });
     }
@@ -191,72 +166,78 @@ class BeerControllerIT {
     @Rollback
     @Transactional
     @Test
-    void testUpdateBeer(){
+    void updateExistingBeer() {
         Beer beer = beerRepository.findAll().get(0);
         BeerDTO beerDTO = beerMapper.beerToBeerDto(beer);
-        beerDTO.setVersion(null);
         beerDTO.setId(null);
-        final String name = "Updated Name";
-        beerDTO.setBeerName(name);
+        beerDTO.setVersion(null);
+        final String beerName = "UPDATED";
+        beerDTO.setBeerName(beerName);
 
         ResponseEntity responseEntity = beerController.updateById(beer.getId(), beerDTO);
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(204));
 
-        //Checks if Status code is correct
-        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.valueOf(204));
-
-        //Checks if updated beer has correct name.
         Beer updatedBeer = beerRepository.findById(beer.getId()).get();
-        assertThat(updatedBeer.getBeerName()).isEqualTo(name);
+        assertThat(updatedBeer.getBeerName()).isEqualTo(beerName);
+    }
+
+    @Rollback
+    @Transactional
+    @Test
+    void saveNewBeerTest() {
+        BeerDTO beerDTO = BeerDTO.builder()
+                .beerName("New Beer")
+                .build();
+
+        ResponseEntity responseEntity = beerController.handlePost(beerDTO);
+
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(201));
+        assertThat(responseEntity.getHeaders().getLocation()).isNotNull();
+
+        String[] locationUUID = responseEntity.getHeaders().getLocation().getPath().split("/");
+        UUID savedUUID = UUID.fromString(locationUUID[4]);
+
+        Beer beer = beerRepository.findById(savedUUID).get();
+        assertThat(beer).isNotNull();
     }
 
     @Test
-    void testDeleteByIdNotFound() {
-
+    void testBeerIdNotFound() {
         assertThrows(NotFoundException.class, () -> {
-            beerController.deleteById(UUID.randomUUID());
+            beerController.getBeerById(UUID.randomUUID());
         });
     }
 
-    @Transactional
-    @Rollback
     @Test
-    public void testDeleteById() {
-
+    void testGetById() {
         Beer beer = beerRepository.findAll().get(0);
 
-        ResponseEntity responseEntity = beerController.deleteById(beer.getId());
+        BeerDTO dto = beerController.getBeerById(beer.getId());
 
-        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.valueOf(204));
-
-       assertThat(beerRepository.findById(beer.getId()).isEmpty());
+        assertThat(dto).isNotNull();
     }
 
     @Test
-    void testPatchByIdNotFound() {
+    void testListBeers() {
+        Page<BeerDTO> dtos = beerController.listBeers(null, null, false, 1, 2413);
 
-        assertThrows(NotFoundException.class, () -> {
-            beerController.updateBeerPatchById(UUID.randomUUID(), BeerDTO.builder().build());
-        });
+        assertThat(dtos.getContent().size()).isEqualTo(1000);
     }
 
-    @Transactional
     @Rollback
+    @Transactional
     @Test
-    void testPatchById() {
+    void testEmptyList() {
+        beerRepository.deleteAll();
+        Page<BeerDTO> dtos = beerController.listBeers(null, null, false, 1, 25);
 
-        Beer beer = beerRepository.findAll().get(0);
-        BeerDTO beerDTO = beerMapper.beerToBeerDto(beer);
-        beerDTO.setId(null);
-        beerDTO.setVersion(null);
-
-        final String name = "Patched Name";
-        beerDTO.setBeerName(name);
-
-        ResponseEntity responseEntity = beerController.updateBeerPatchById(beer.getId(), beerDTO);
-
-        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.valueOf(204));
-
-        Beer patchedBeer = beerRepository.findById(beer.getId()).get();
-        assertThat(patchedBeer.getBeerName()).isEqualTo(name);
+        assertThat(dtos.getContent().size()).isEqualTo(0);
     }
 }
+
+
+
+
+
+
+

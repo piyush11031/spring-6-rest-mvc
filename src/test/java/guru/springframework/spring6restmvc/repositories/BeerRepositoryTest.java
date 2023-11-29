@@ -2,7 +2,6 @@ package guru.springframework.spring6restmvc.repositories;
 
 import guru.springframework.spring6restmvc.bootstrap.BootStrapData;
 import guru.springframework.spring6restmvc.entities.Beer;
-import guru.springframework.spring6restmvc.model.BeerDTO;
 import guru.springframework.spring6restmvc.model.BeerStyle;
 import guru.springframework.spring6restmvc.services.BeerCsvServiceImpl;
 import jakarta.validation.ConstraintViolationException;
@@ -10,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -18,11 +18,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.hamcrest.core.Is.is;
 
 
@@ -36,25 +33,25 @@ class BeerRepositoryTest {
     @Test
     void testGetBeerListByNameAndStyle() {
 
-        List<Beer> list = beerRepository.findAllByBeerNameIsLikeIgnoreCaseAndBeerStyle("%IPA%",BeerStyle.IPA);
+        Page<Beer> list = beerRepository.findAllByBeerNameIsLikeIgnoreCaseAndBeerStyle("%IPA%",BeerStyle.IPA, null);
 
-        assertThat(list.size()).isEqualTo(310);
+        assertThat(list.getContent().size()).isEqualTo(310);
     }
 
     @Test
     void testGetBeerListByStyle() {
 
-        List<Beer> list = beerRepository.findAllByBeerStyle(BeerStyle.PALE_ALE);
+        Page<Beer> list = beerRepository.findAllByBeerStyle(BeerStyle.PALE_ALE, null);
 
-        assertThat(list.size()).isEqualTo(14);
+        assertThat(list.getContent().size()).isEqualTo(14);
     }
 
     @Test
     void testGetBeerListByName() {
 
-        List<Beer> list = beerRepository.findAllByBeerNameIsLikeIgnoreCase("%IPA%");
+        Page<Beer> list = beerRepository.findAllByBeerNameIsLikeIgnoreCase("%IPA%", null);
 
-        assertThat(list.size()).isEqualTo(336);
+        assertThat(list.getContent().size()).isEqualTo(336);
     }
 
     @Test

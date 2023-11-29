@@ -14,15 +14,16 @@ import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
+@Getter
+@Setter
 @Builder
-@Data
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
-@Getter
-@Setter
 public class Beer {
     @Id
     @GeneratedValue(generator = "UUID")
@@ -57,4 +58,26 @@ public class Beer {
 
     @UpdateTimestamp //hibernate annotation
     private LocalDateTime updateDate;
+
+    @Builder.Default
+    @ManyToMany
+    @JoinTable(name = "beer_category", //name of Join table
+        joinColumns = @JoinColumn(name = "beer_id"), //Id of current entity
+        inverseJoinColumns = @JoinColumn(name = "category_id")) //Id of related entity
+    private Set<Category> categories = new HashSet<>();
+
+    //We want to add and remove category from the beer object
+    public void addCategory(Category category){
+        this.categories.add(category);
+        category.getBeers().add(this);
+    }
+
+    public void removeCategory(Category category){
+        this.categories.remove(category);
+        category.getBeers().remove(category);
+    }
+
+
+    @OneToMany(mappedBy = "beer")
+    private Set<BeerOrderLine> beerOrderLines;
 }
