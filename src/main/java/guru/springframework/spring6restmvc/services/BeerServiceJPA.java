@@ -121,24 +121,28 @@ public class BeerServiceJPA implements BeerService {
 
     @Override
     public Optional<BeerDTO> updateBeerById(UUID beerId, BeerDTO beer) {
+        return Optional.of(beerMapper.beerToBeerDto(
+                beerRepository.save(beerMapper.beerDtoToBeer(beer))
+        ));
 
-        AtomicReference<Optional<BeerDTO>> atomicReference = new AtomicReference<>();
-
-        beerRepository.findById(beerId).ifPresentOrElse(
-                foundBeer -> {
-                    foundBeer.setBeerName(beer.getBeerName());
-                    foundBeer.setBeerStyle(beer.getBeerStyle());
-                    foundBeer.setQuantityOnHand(beer.getQuantityOnHand());
-                    foundBeer.setPrice(beer.getPrice());
-                    foundBeer.setUpc(beer.getUpc());
-                    Optional<BeerDTO>beerDTO = Optional.of(beerMapper.beerToBeerDto(foundBeer));
-                    atomicReference.set(beerDTO);
-                },
-                () ->{
-                    atomicReference.set(Optional.empty());
-                }
-        );
-        return atomicReference.get();
+//        AtomicReference<Optional<BeerDTO>> atomicReference = new AtomicReference<>();
+//
+//        beerRepository.findById(beerId).ifPresentOrElse(
+//                foundBeer -> {
+//                    foundBeer.setBeerName(beer.getBeerName());
+//                    foundBeer.setBeerStyle(beer.getBeerStyle());
+//                    foundBeer.setQuantityOnHand(beer.getQuantityOnHand());
+//                    foundBeer.setPrice(beer.getPrice());
+//                    foundBeer.setUpc(beer.getUpc());
+//                    foundBeer.setVersion(beer.getVersion());
+//                    Optional<BeerDTO>beerDTO = Optional.of(beerMapper.beerToBeerDto(foundBeer));
+//                    atomicReference.set(beerDTO);
+//                },
+//                () ->{
+//                    atomicReference.set(Optional.empty());
+//                }
+//        );
+//        return atomicReference.get();
     }
 
     @Override
