@@ -1,10 +1,12 @@
 package guru.springframework.spring6restmvc.services;
 
+import guru.springframework.spring6restmvc.controller.NotFoundException;
 import guru.springframework.spring6restmvc.entities.Beer;
 import guru.springframework.spring6restmvc.mappers.BeerMapper;
 import guru.springframework.spring6restmvc.model.BeerDTO;
 import guru.springframework.spring6restmvc.model.BeerStyle;
 import guru.springframework.spring6restmvc.repositories.BeerRepository;
+import jakarta.persistence.OptimisticLockException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.domain.Page;
@@ -121,9 +123,10 @@ public class BeerServiceJPA implements BeerService {
 
     @Override
     public Optional<BeerDTO> updateBeerById(UUID beerId, BeerDTO beer) {
-        return Optional.of(beerMapper.beerToBeerDto(
-                beerRepository.save(beerMapper.beerDtoToBeer(beer))
-        ));
+
+        Beer savedBeer = beerRepository.save(beerMapper.beerDtoToBeer(beer));
+        BeerDTO dto = beerMapper.beerToBeerDto(savedBeer);
+        return Optional.of(dto);
 
 //        AtomicReference<Optional<BeerDTO>> atomicReference = new AtomicReference<>();
 //
@@ -135,6 +138,7 @@ public class BeerServiceJPA implements BeerService {
 //                    foundBeer.setPrice(beer.getPrice());
 //                    foundBeer.setUpc(beer.getUpc());
 //                    foundBeer.setVersion(beer.getVersion());
+//                    beerRepository.save(foundBeer);
 //                    Optional<BeerDTO>beerDTO = Optional.of(beerMapper.beerToBeerDto(foundBeer));
 //                    atomicReference.set(beerDTO);
 //                },
@@ -143,7 +147,7 @@ public class BeerServiceJPA implements BeerService {
 //                }
 //        );
 //        return atomicReference.get();
-    }
+   }
 
     @Override
     public Boolean deleteBeerById(UUID beerId) {

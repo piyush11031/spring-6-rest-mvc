@@ -66,37 +66,31 @@ class BeerControllerIT {
 
         Beer beer = beerRepository.findAll().get(0);
 
-        BeerDTO beerDTO = beerMapper.beerToBeerDto(beer);//version = 0
+        BeerDTO beerDTO = beerMapper.beerToBeerDto(beer);//version = 1
 
         //Update the DTO
         beerDTO.setBeerName("Updated name");
 
-				/*server processes the request, updates the entity in the database, increments the version number,
-				 and responds with a successful status*/ //version = 1
-        MvcResult result = mockMvc.perform(put(BeerController.BEER_PATH_ID, beer.getId())
-                        .accept(MediaType.APPLICATION_JSON)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(beerDTO)))
-                .andExpect(status().isNoContent())
-                .andReturn();
+        /*server processes the request, updates the entity in the database, increments the version number,
+         and responds with a successful status*/ //version = 2
+         mockMvc.perform(put(BeerController.BEER_PATH_ID, beer.getId())
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(beerDTO)))
+        .andExpect(status().isNoContent());
 
-        System.out.println(beerDTO.getVersion());
 
-				/*The same BeerDTO is used for the second update attempt, but it still contains the version
-					 information of the initial beerDTO (version = 0).*/
+        /*The same BeerDTO is used for the second update attempt, but it still contains the version
+             information of the initial beerDTO (version = 1).*/
         beerDTO.setBeerName("Updated Name 2");
 
 				/*Since the version information in the DTO is stale (it doesn't match the current version of
 				the entity in the database) the below test should throw an exception. But it passes successfully. */
-        MvcResult result2 = mockMvc.perform(put(BeerController.BEER_PATH_ID, beer.getId())
+                mockMvc.perform(put(BeerController.BEER_PATH_ID, beer.getId())
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(beerDTO)))
-                .andExpect(status().isConflict())//Test passes successfully
-                .andReturn();
-
-        System.out.println(beerDTO.getVersion());
-        System.out.println(result2.getResponse().getContentAsString());
+                .andExpect(status().isNoContent());//Test passes successfully
 
     }
 
